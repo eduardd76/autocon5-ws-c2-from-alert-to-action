@@ -1,0 +1,29 @@
+# Lab 3 — scenario catalogue entry for the QoS specialist.
+#
+# The production catalogue (agentic-netops-mvp/agents/scenarios/) has 72
+# scenarios across stability/troubleshooting/security/EVPN/etc. Each one
+# follows roughly this shape. This is the minimal version.
+
+id: qos_interface_congested
+title: "QoS interface congestion — policy-map drops"
+owner_specialist: qos_specialist
+severity: warning
+
+trigger:
+  source: syslog
+  pattern: "%QOS-4-CONGESTION"
+  example_message: |
+    %QOS-4-CONGESTION: Interface GigabitEthernet0/1 policy-map child-policy
+    class voice-priority drops 4521 packets in last 60s
+
+evidence_required:
+  - show policy-map interface Gi0/1
+  - show interface Gi0/1 | inc rate
+  - show qos queue Gi0/1
+
+likely_root_causes:
+  - policy-map shaping value misconfigured (lower than actual traffic rate)
+  - voice class queue undersized for incoming priority traffic
+  - upstream device not marking DSCP, causing class-default starvation
+
+# Lab 3 attendees: feel free to add a second scenario here as the bonus.

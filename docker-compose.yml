@@ -1,0 +1,106 @@
+# AutoCon5 WS:C2 — laptop lab. 5 services, ~1.5 GB RAM, no GPU, no Neo4j, no cloud.
+# Production stack is in agentic-netops-mvp/ (Dream Team) — this is the stripped attendee version.
+services:
+
+  redis:
+    image: redis:7-alpine
+    container_name: ws-c2-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks: [wsc2]
+    restart: unless-stopped
+
+  mcp-server:
+    build:
+      context: ./services
+      dockerfile: mcp-server/Dockerfile
+    container_name: ws-c2-mcp
+    ports:
+      - "8001:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - MCP_API_KEY=${MCP_API_KEY:-dev-key-123}
+      - USE_REAL_DEVICES=${USE_REAL_DEVICES:-false}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    networks: [wsc2]
+    restart: unless-stopped
+
+  team-leader:
+    build:
+      context: ./services
+      dockerfile: team-leader/Dockerfile
+    container_name: ws-c2-team-leader
+    ports:
+      - "8002:8002"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - LLM_PROVIDER=${LLM_PROVIDER:-stub}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks: [wsc2]
+    restart: unless-stopped
+
+  stability-agent:
+    build:
+      context: ./services
+      dockerfile: stability-agent/Dockerfile
+    container_name: ws-c2-stability
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - MCP_URL=http://mcp-server:8000
+      - MCP_API_KEY=${MCP_API_KEY:-dev-key-123}
+      - LLM_PROVIDER=${LLM_PROVIDER:-stub}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      redis:
+        condition: service_healthy
+      mcp-server:
+        condition: service_healthy
+    networks: [wsc2]
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: ./services
+      dockerfile: ui/Dockerfile
+    container_name: ws-c2-ui
+    ports:
+      - "8501:8501"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - MCP_URL=http://mcp-server:8000
+      - MCP_API_KEY=${MCP_API_KEY:-dev-key-123}
+      - TEAM_LEADER_URL=http://team-leader:8002
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      redis:
+        condition: service_healthy
+      team-leader:
+        condition: service_started
+    networks: [wsc2]
+    restart: unless-stopped
+
+networks:
+  wsc2:
+    driver: bridge
