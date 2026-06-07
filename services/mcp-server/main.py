@@ -182,6 +182,21 @@ async def bgp_summary(req: ToolRequest, _=Depends(verify_api_key)):
     return await check_and_cache("bgp_summary", req.idempotency_key, _do)
 
 
+@app.get("/scenarios")
+async def list_scenarios():
+    """List every scenario in the YAML catalogue (the SSOT) — for the UI/CLI."""
+    try:
+        import sys
+        sys.path.insert(0, "/app")
+        from shared.scenario_loader import load_scenarios
+        sc = load_scenarios(force=True)
+        return {"scenarios": [
+            {"scenario_id": k, "title": v.get("title"), "owner": v.get("owner_specialist"),
+             "source": v.get("_source_file")} for k, v in sorted(sc.items())]}
+    except Exception as e:
+        return {"scenarios": [], "error": str(e)}
+
+
 @app.post("/incident/trigger")
 async def trigger_incident(trig: IncidentTrigger, _=Depends(verify_api_key)):
     """Push a fake syslog incident onto the incident_queue.
@@ -205,6 +220,15 @@ async def trigger_incident(trig: IncidentTrigger, _=Depends(verify_api_key)):
 
 
 def _scenario_to_syslog(sid: str, dev: str) -> str:
+    try:
+        import sys
+        sys.path.insert(0, "/app")
+        from shared.scenario_loader import get_scenario
+        _scn = get_scenario(sid)
+        if _scn and (_scn.get("trigger") or {}).get("example_message"):
+            return str(_scn["trigger"]["example_message"]).replace("{device}", dev)
+    except Exception:
+        pass
     table = {
         "bgp_session_idle": f"%BGP-3-NOTIFICATION: sent to neighbor 10.0.0.2 4/0 (hold time expired) 0 bytes",
         "evpn_route_missing": f"%EVPN-4-ROUTE_MISSING: VNI 10100 expected MAC aa:bb:cc:dd:ee:ff not in BGP EVPN table",

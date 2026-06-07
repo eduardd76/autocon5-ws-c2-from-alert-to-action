@@ -1,0 +1,19 @@
+scenario_id: bgp_flap_after_maintenance
+title: "BGP session flapping after a maintenance window — MTU mismatch"
+owner_specialist: stability_specialist
+severity: warning
+trigger:
+  syslog_pattern: '%BGP-5-ADJCHANGE'
+  example_message: "%BGP-5-ADJCHANGE: neighbor 10.0.0.9 Up/Down flapping on {device} after change-window CHG-4471"
+root_cause: "Jumbo-frame MTU mismatch introduced during maintenance — {device} 9216, peer 1500 — large BGP updates blackholed, session resets on keepalive"
+evidence:
+  - "show interface: MTU 9216 on the uplink, peer negotiated 1500"
+  - "BGP session resets every ~90s on hold-timer, not on link down"
+  - "ping with DF + size 9000 to the peer fails; size 1400 succeeds"
+proposed_fix:
+  commands: ["interface Ethernet1", "mtu 1500"]
+  rollback: ["interface Ethernet1", "no mtu"]
+risk_assessment: medium
+confidence: 0.88
+provenance:
+  author: vexpertai (example)

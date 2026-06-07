@@ -96,6 +96,8 @@ class StabilityAgent:
             "proposed_fix": diagnosis.get("proposed_fix", {}),
             "risk_assessment": diagnosis.get("risk_assessment"),
             "confidence": diagnosis.get("confidence"),
+            "authored_by": diagnosis.get("authored_by"),
+            "title": diagnosis.get("title"),
             "llm_provider": diagnosis.get("llm_provider"),
             "llm_model": diagnosis.get("llm_model"),
             "tokens_used": diagnosis.get("tokens_used"),

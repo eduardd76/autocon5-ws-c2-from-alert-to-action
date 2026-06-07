@@ -1,0 +1,19 @@
+scenario_id: bgp_session_idle
+title: "BGP peer stuck Idle — ACL dropping TCP/179"
+owner_specialist: stability_specialist
+severity: warning
+trigger:
+  syslog_pattern: '%BGP-3-NOTIFICATION'
+  example_message: "%BGP-3-NOTIFICATION: sent to neighbor 10.0.0.2 4/0 (hold time expired) 0 bytes"
+root_cause: "BGP peer 10.0.0.2 stuck in Idle — TCP/179 unreachable, ACL on Gi0/0 dropping inbound"
+evidence:
+  - "show bgp summary: 10.0.0.2 state=Idle since 12m"
+  - "show access-list 101: deny tcp any any eq 179 (matches: 47)"
+  - "ping 10.0.0.2 succeeds, TCP-only blocked"
+proposed_fix:
+  commands: ["ip access-list extended 101", "no deny tcp any any eq 179", "permit tcp any any eq 179"]
+  rollback: ["ip access-list extended 101", "no permit tcp any any eq 179", "deny tcp any any eq 179"]
+risk_assessment: medium
+confidence: 0.87
+provenance:
+  author: vexpertai (built-in)

@@ -55,6 +55,22 @@ def classify(incident: dict) -> AgentRole:
     triage step. Workshop version is a 6-line keyword router. Same idea,
     much smaller surface area.
     """
+    sid = incident.get("scenario_id") or incident.get("incident_type")
+    # SSOT: a catalogue scenario routes to its owner_specialist. In the laptop lab
+    # only the stability specialist runs, so catalogue scenarios resolve to stability
+    # (production has troubleshooting + security specialists for their own domains).
+    try:
+        from shared.scenario_loader import get_scenario
+        _scn = get_scenario(sid)
+    except Exception:
+        _scn = None
+    if _scn:
+        _owner = str(_scn.get("owner_specialist") or "").lower()
+        if "troubleshoot" in _owner:
+            return AgentRole.TROUBLESHOOTING_SPECIALIST
+        if "security" in _owner:
+            return AgentRole.SECURITY_SPECIALIST
+        return AgentRole.STABILITY_SPECIALIST
     msg = (incident.get("raw_message") or "").lower()
     scenario = (incident.get("scenario_id") or incident.get("incident_type") or "").lower()
     if "ospf" in msg or "bgp" in msg or "evpn" in msg or "ospf" in scenario or "bgp" in scenario or "evpn" in scenario:
@@ -113,6 +129,8 @@ async def incident_loop():
                 "proposed_fix": result.get("proposed_fix"),
                 "risk_assessment": result.get("risk_assessment"),
                 "confidence": result.get("confidence"),
+                "authored_by": result.get("authored_by"),
+                "title": result.get("title"),
                 "received_at": datetime.now(timezone.utc).isoformat(),
                 "status": "pending_approval",
             }

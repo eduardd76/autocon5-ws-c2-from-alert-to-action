@@ -112,6 +112,24 @@ class StubLLMClient:
         + evidence). We sidestep the prompt and key off scenario_id, which the
         Stability agent always sets from the incident envelope.
         """
+        # SSOT: a YAML scenario in lab_scenarios/ wins over the built-in CANNED dict.
+        try:
+            from shared.scenario_loader import get_scenario
+            _scn = get_scenario(scenario_id)
+        except Exception:
+            _scn = None
+        if _scn:
+            _fix = _scn.get("proposed_fix") or {}
+            return {
+                "root_cause": _scn.get("root_cause", f"scenario {scenario_id} (no root_cause authored)"),
+                "evidence": _scn.get("evidence", []) or [],
+                "proposed_fix": {"commands": _fix.get("commands", []) or [], "rollback": _fix.get("rollback", []) or []},
+                "risk_assessment": _scn.get("risk_assessment", "unknown"),
+                "confidence": float(_scn.get("confidence", 0.5) or 0.5),
+                "llm_provider": "stub", "llm_model": "catalogue-v1", "tokens_used": 0,
+                "authored_by": (_scn.get("provenance") or {}).get("author"),
+                "title": _scn.get("title"),
+            }
         if scenario_id and scenario_id in CANNED:
             response = CANNED[scenario_id].copy()
             response["llm_provider"] = "stub"

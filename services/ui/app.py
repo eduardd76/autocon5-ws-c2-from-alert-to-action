@@ -38,6 +38,7 @@ st.caption("5-agent NetOps dream team — laptop edition. Mock devices, canned L
 
 st.sidebar.header("Lab 1: Trigger an incident")
 scenarios = [
+    ("ospf_neighbor_down", "router-1", "OSPF adjacency down (Cisco)"),
     ("bgp_session_idle",   "router-1", "BGP idle / ACL block (Cisco)"),
     ("evpn_route_missing", "leaf-1",   "EVPN Type-2 missing (Arista EOS)"),
 ]
@@ -60,6 +61,26 @@ with st.sidebar:
                 st.error(f"trigger error: {e}")
             time.sleep(0.5)
             st.rerun()
+
+    st.divider()
+    st.subheader("Lab 3: Fire YOUR scenario")
+    try:
+        _sc = httpx.get(f"{MCP_URL}/scenarios", headers={"X-MCP-API-Key": MCP_API_KEY}, timeout=3.0).json().get("scenarios", [])
+    except Exception:
+        _sc = []
+    _ids = [s2["scenario_id"] for s2 in _sc]
+    if _ids:
+        _pick = st.selectbox("scenario_id (live catalogue)", _ids, key="lab3pick")
+        _dev = st.text_input("device_id", value="router-1", key="lab3dev")
+        if st.button("🔥 Fire this scenario", key="lab3fire", use_container_width=True):
+            try:
+                _r = httpx.post(f"{MCP_URL}/incident/trigger", json={"scenario_id": _pick, "device_id": _dev}, headers={"X-MCP-API-Key": MCP_API_KEY}, timeout=5.0)
+                st.success(f"fired: {_pick}") if _r.status_code == 200 else st.error(f"fail: {_r.text}")
+            except Exception as _e:
+                st.error(f"error: {_e}")
+            time.sleep(0.5); st.rerun()
+    else:
+        st.caption("No scenarios loaded.")
 
     st.divider()
     st.caption("Health")
@@ -116,6 +137,8 @@ else:
             with cc1:
                 st.markdown(f"**Specialist:** `{a.get('specialist')}`")
                 st.markdown(f"**Root cause:** {a.get('root_cause')}")
+                if a.get("authored_by"):
+                    st.markdown(f"**Authored by:** `{a.get('authored_by')}` 🧠 *(your scenario drove this)*")
                 st.markdown(f"**Risk:** `{a.get('risk_assessment')}`")
                 st.markdown("**Evidence:**")
                 for e in a.get("evidence", []):

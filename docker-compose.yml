@@ -28,6 +28,9 @@ services:
       - USE_REAL_DEVICES=${USE_REAL_DEVICES:-false}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - PYTHONUNBUFFERED=1
+      - SCENARIOS_DIR=/app/lab_scenarios
+    volumes:
+      - ./lab_scenarios:/app/lab_scenarios
     depends_on:
       redis:
         condition: service_healthy
@@ -53,6 +56,9 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - PYTHONUNBUFFERED=1
+      - SCENARIOS_DIR=/app/lab_scenarios
+    volumes:
+      - ./lab_scenarios:/app/lab_scenarios
     depends_on:
       redis:
         condition: service_healthy
@@ -72,6 +78,9 @@ services:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - PYTHONUNBUFFERED=1
+      - SCENARIOS_DIR=/app/lab_scenarios
+    volumes:
+      - ./lab_scenarios:/app/lab_scenarios
     depends_on:
       redis:
         condition: service_healthy
@@ -93,6 +102,9 @@ services:
       - MCP_API_KEY=${MCP_API_KEY:-dev-key-123}
       - TEAM_LEADER_URL=http://team-leader:8002
       - PYTHONUNBUFFERED=1
+      - SCENARIOS_DIR=/app/lab_scenarios
+    volumes:
+      - ./lab_scenarios:/app/lab_scenarios
     depends_on:
       redis:
         condition: service_healthy

@@ -1,0 +1,21 @@
+scenario_id: ospf_neighbor_down
+title: "OSPF neighbor stuck in INIT — hello/dead mismatch"
+owner_specialist: stability_specialist
+severity: warning
+trigger:
+  syslog_pattern: '%OSPF-5-ADJCHG'
+  example_message: "%OSPF-5-ADJCHG: Process 1, Nbr 10.0.0.2 on {device} from INIT to DOWN, Neighbor Down: hello-interval mismatch"
+# --- the diagnosis the agent presents. In production the fine-tuned model writes
+#     this, GROUNDED by this catalogue entry. On the laptop (stub LLM) you author it. ---
+root_cause: "OSPF hello-interval mismatch on GigabitEthernet0/1 — local 10s, neighbor 30s"
+evidence:
+  - "show ip ospf interface Gi0/1 reports Hello 10s / Dead 40s"
+  - "neighbor adjacency stuck in INIT for 4m 23s"
+  - "no authentication mismatch (both none)"
+proposed_fix:
+  commands: ["interface GigabitEthernet0/1", "ip ospf hello-interval 30", "ip ospf dead-interval 120"]
+  rollback: ["interface GigabitEthernet0/1", "no ip ospf hello-interval", "no ip ospf dead-interval"]
+risk_assessment: low
+confidence: 0.92
+provenance:
+  author: vexpertai (built-in)

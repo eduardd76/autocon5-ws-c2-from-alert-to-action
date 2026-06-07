@@ -1,0 +1,19 @@
+scenario_id: evpn_route_missing
+title: "EVPN Type-2 route missing — RT import mismatch"
+owner_specialist: stability_specialist
+severity: warning
+trigger:
+  syslog_pattern: '%EVPN-4-ROUTE_MISSING'
+  example_message: "%EVPN-4-ROUTE_MISSING: VNI 10100 expected MAC aa:bb:cc:dd:ee:ff not in BGP EVPN table on {device}"
+root_cause: "EVPN Type-2 route for MAC aa:bb:cc:dd:ee:ff missing on Arista leaf-1 — RT import mismatch (VRF tenant-a imports 65000:200, peer advertises 65000:100)"
+evidence:
+  - "show bgp evpn route-type mac-ip: 0 entries for VNI 10100"
+  - "show vrf tenant-a: leaf-1 imports 65000:200, peer advertises 65000:100"
+  - "control-plane reachable, no underlay loss"
+proposed_fix:
+  commands: ["router bgp 65000", "vrf tenant-a", "route-target import evpn 65000:100"]
+  rollback: ["router bgp 65000", "vrf tenant-a", "no route-target import evpn 65000:100"]
+risk_assessment: low
+confidence: 0.94
+provenance:
+  author: vexpertai (built-in)

@@ -1,0 +1,41 @@
+# ============================================================================
+# LAB 3 — AUTHOR YOUR OWN SCENARIO   (copy me into  mine/<your-name>.yaml)
+# ----------------------------------------------------------------------------
+# This ONE file is the Single Source of Truth for a fault. When you load it,
+# it drives: detection (the syslog) -> routing -> the agent's diagnosis -> the
+# approval card. "Add a fault = add a file." That is Institutional Memory as Code.
+#
+# Fill every line marked  <-- FILL  . Then:
+#   1) validate :  python3 lab_scenarios/validate.py lab_scenarios/mine/<you>.yaml
+#   2) fire it  :  make fire-mine SCN=<your scenario_id>
+#   3) watch    :  the UI Approvals tab -> your card, with YOUR fix on it
+# ============================================================================
+
+scenario_id: my_fault_id          # <-- FILL  unique, lower_snake_case, no spaces
+title: "Short human title"        # <-- FILL
+owner_specialist: stability_specialist   # keep as-is for the laptop lab (the only running specialist)
+severity: warning                 # info | warning | critical
+
+trigger:
+  syslog_pattern: '%FACILITY-5-MNEMONIC'      # <-- FILL  the Cisco/Arista facility that fires it
+  example_message: "%FACILITY-5-MNEMONIC: the exact log line, mention {device}"   # <-- FILL
+
+# --- the diagnosis the agent will present on the card ---
+# (In production the fine-tuned model writes this, grounded by this entry.
+#  On your laptop the LLM is a stub, so YOU write the expected answer here.)
+root_cause: "One clear sentence: what is actually wrong."     # <-- FILL
+evidence:                                                     # <-- FILL 2-3 show-command findings
+  - "show ... reports ..."
+  - "show ... reports ..."
+proposed_fix:
+  commands:                                                   # <-- FILL the fix, in order
+    - "configure terminal"
+    - "..."
+  rollback:                                                   # <-- FILL how to undo it
+    - "..."
+risk_assessment: low              # low | medium | high
+confidence: 0.90                  # 0.0 - 1.0
+
+provenance:
+  author: you@yourcompany.com     # <-- FILL  your work email (your name on the brain)
+  authored_at: "2026-06-09"
