@@ -1,6 +1,6 @@
 # Optional convenience targets. The labs use `docker compose` + `curl` directly.
 
-.PHONY: up down logs preflight pull trigger-ospf trigger-bgp trigger-evpn test-lab3 list-scenarios validate-mine fire-mine
+.PHONY: up down logs preflight pull trigger-ospf trigger-bgp trigger-evpn test-lab3 lab3-test lab3-solve list-scenarios validate-mine fire-mine
 
 up:
 	docker compose up -d
@@ -35,8 +35,18 @@ trigger-evpn:
 	  -H "Content-Type: application/json" \
 	  -d '{"scenario_id":"evpn_route_missing","device_id":"leaf-1"}' | python3 -m json.tool
 
-test-lab3:
-	cd labs/lab3_wire_your_own_specialist && python -m pytest starter/test_my_specialist.py -v
+# --- Lab 3 (build a specialist) ---
+# See the failing tests (compact — no scary traceback):
+lab3-test:
+	@cd labs/lab3_wire_your_own_specialist && python3 -m pytest test_my_specialist.py --tb=no -q
+
+# Foolproof: copy the reference QoS specialist into the EXACT filename + re-test.
+lab3-solve:
+	@cp labs/lab3_wire_your_own_specialist/solution/agent_qos.py labs/lab3_wire_your_own_specialist/starter/agent_yourname.py
+	@echo "✓ copied reference QoS specialist -> starter/agent_yourname.py"
+	@cd labs/lab3_wire_your_own_specialist && python3 -m pytest test_my_specialist.py --tb=no -q
+
+test-lab3: lab3-test
 
 # --- Lab 3 (YAML authoring) ---
 list-scenarios:
