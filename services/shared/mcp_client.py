@@ -40,5 +40,8 @@ class MCPClient:
     async def bgp_summary(self, device_id: str) -> dict[str, Any]:
         return await self.call_tool("bgp_summary", {"device_id": device_id})
 
+    async def qos_parser(self, device_id: str) -> dict[str, Any]:
+        return await self.call_tool("qos_parser", {"device_id": device_id})
+
     async def close(self):
         await self._client.aclose()

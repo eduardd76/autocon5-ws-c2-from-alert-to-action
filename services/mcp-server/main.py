@@ -36,6 +36,10 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379")
 MOCK_DEVICE_STATE = {
     "router-1": {
         "vendor": "cisco-ios",
+        "qos": {"interface": "GigabitEthernet0/1", "policy_map": "child-policy",
+                "classes": [{"name": "voice-priority", "shape_kbps": 1000, "offered_kbps": 1700,
+                             "drops_60s": 4521, "wred": True}],
+                "egress_congested": True},
         "ospf_neighbors": [
             {"router_id": "10.0.0.2", "interface": "GigabitEthernet0/1",
              "state": "INIT", "uptime": "00:04:23", "dead_timer": "00:00:39"},
@@ -197,6 +201,18 @@ async def list_scenarios():
         return {"scenarios": [], "error": str(e)}
 
 
+@app.post("/tools/qos_parser", response_model=ToolResponse)
+async def qos_parser(req: ToolRequest, _=Depends(verify_api_key)):
+    async def _do():
+        dev = MOCK_DEVICE_STATE.get(req.device_id)
+        if not dev:
+            raise HTTPException(404, f"unknown device {req.device_id}")
+        return {"device_id": req.device_id,
+                "data": {"qos": dev.get("qos", {}), "vendor": dev["vendor"]},
+                "timestamp": datetime.now(timezone.utc).isoformat()}
+    return await check_and_cache("qos_parser", req.idempotency_key, _do)
+
+
 @app.post("/incident/trigger")
 async def trigger_incident(trig: IncidentTrigger, _=Depends(verify_api_key)):
     """Push a fake syslog incident onto the incident_queue.
@@ -230,6 +246,7 @@ def _scenario_to_syslog(sid: str, dev: str) -> str:
     except Exception:
         pass
     table = {
+        "qos_interface_congested": "%QOS-4-CONGESTION: GigabitEthernet0/1 policy-map child-policy class voice-priority tail-drops 4521 pkts/60s (shape 1000kbps < offered 1700kbps)",
         "bgp_session_idle": f"%BGP-3-NOTIFICATION: sent to neighbor 10.0.0.2 4/0 (hold time expired) 0 bytes",
         "evpn_route_missing": f"%EVPN-4-ROUTE_MISSING: VNI 10100 expected MAC aa:bb:cc:dd:ee:ff not in BGP EVPN table",
     }

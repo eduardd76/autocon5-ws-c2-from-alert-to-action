@@ -5,3 +5,6 @@ __pycache__/
 .pytest_cache/
 .DS_Store
 *.log
+
+# attendee Lab-3 personal scenarios (never commit)
+lab_scenarios/mine/*.yaml

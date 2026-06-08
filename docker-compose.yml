@@ -89,6 +89,24 @@ services:
     networks: [wsc2]
     restart: unless-stopped
 
+  your-agent:
+    build:
+      context: ./services
+      dockerfile: your-agent/Dockerfile
+    container_name: ws-c2-your-agent
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - MCP_URL=http://mcp-server:8000
+      - MCP_API_KEY=${MCP_API_KEY:-dev-key-123}
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      redis:
+        condition: service_healthy
+      mcp-server:
+        condition: service_healthy
+    networks: [wsc2]
+    restart: unless-stopped
+
   ui:
     build:
       context: ./services

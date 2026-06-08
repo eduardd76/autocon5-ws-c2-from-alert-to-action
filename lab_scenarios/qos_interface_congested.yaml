@@ -1,0 +1,19 @@
+scenario_id: qos_interface_congested
+title: "QoS congestion — child-policy shaper drops on Gi0/1"
+owner_specialist: qos_specialist
+severity: warning
+trigger:
+  syslog_pattern: '%QOS-4-CONGESTION'
+  example_message: "%QOS-4-CONGESTION: Interface GigabitEthernet0/1 policy-map child-policy class voice-priority tail-drops 4521 packets in last 60s (shape 1000kbps < offered 1700kbps) on {device}"
+root_cause: "Voice-priority child-policy on Gi0/1 is over-subscribed — shaper cap 1 Mbps, 60s burst peaked at 1.7 Mbps; WRED tail-dropping EF"
+evidence:
+  - "show policy-map interface Gi0/1: 4521 drops on class voice-priority in 60s"
+  - "show interface Gi0/1 | inc rate: peak 1.7 Mbps over last interval"
+  - "upstream router-2 marks DSCP EF correctly; receive-side shaper is the bottleneck"
+proposed_fix:
+  commands: ["policy-map child-policy", " class voice-priority", "  priority 2000"]
+  rollback: ["policy-map child-policy", " class voice-priority", "  priority 1000"]
+risk_assessment: low
+confidence: 0.88
+provenance:
+  author: qos-specialist (lab3)

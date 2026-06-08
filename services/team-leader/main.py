@@ -70,6 +70,8 @@ def classify(incident: dict) -> AgentRole:
             return AgentRole.TROUBLESHOOTING_SPECIALIST
         if "security" in _owner:
             return AgentRole.SECURITY_SPECIALIST
+        if "qos" in _owner:
+            return AgentRole.YOUR_SPECIALIST
         return AgentRole.STABILITY_SPECIALIST
     msg = (incident.get("raw_message") or "").lower()
     scenario = (incident.get("scenario_id") or incident.get("incident_type") or "").lower()
@@ -79,6 +81,8 @@ def classify(incident: dict) -> AgentRole:
         return AgentRole.TROUBLESHOOTING_SPECIALIST
     if "acl" in msg or "aaa" in msg or "login" in msg:
         return AgentRole.SECURITY_SPECIALIST
+    if "qos" in msg or "policy-map" in msg or "shaping" in msg or "congestion" in msg or "qos" in scenario:
+        return AgentRole.YOUR_SPECIALIST
     # Default: send unknown to stability (the only one running in the lab).
     return AgentRole.STABILITY_SPECIALIST
 
