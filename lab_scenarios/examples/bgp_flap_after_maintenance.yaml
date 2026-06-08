@@ -5,7 +5,7 @@ severity: warning
 trigger:
   syslog_pattern: '%BGP-5-ADJCHANGE'
   example_message: "%BGP-5-ADJCHANGE: neighbor 10.0.0.9 Up/Down flapping on {device} after change-window CHG-4471"
-root_cause: "Jumbo-frame MTU mismatch introduced during maintenance — {device} 9216, peer 1500 — large BGP updates blackholed, session resets on keepalive"
+root_cause: "Jumbo-frame MTU mismatch introduced during maintenance — local 9216, peer 1500 — large BGP updates blackholed, session resets on keepalive"
 evidence:
   - "show interface: MTU 9216 on the uplink, peer negotiated 1500"
   - "BGP session resets every ~90s on hold-timer, not on link down"
