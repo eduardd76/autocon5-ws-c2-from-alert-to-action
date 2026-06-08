@@ -1,0 +1,36 @@
+# ospf-area0.yaml
+# A tiny OSPF network: 3 routers, all in area 0, wired in a triangle.
+# This file is the "source of truth" — Step 4 turns it into a Neo4j graph.
+
+area: 0
+
+routers:
+  - id: R1
+    router_id: 1.1.1.1
+    interfaces:
+      - name: Gi0/0
+        ip: 10.0.12.1/30
+        neighbor: R2        # R1's link to R2
+      - name: Gi0/1
+        ip: 10.0.13.1/30
+        neighbor: R3        # R1's link to R3
+
+  - id: R2
+    router_id: 2.2.2.2
+    interfaces:
+      - name: Gi0/0
+        ip: 10.0.12.2/30
+        neighbor: R1        # R2's link to R1
+      - name: Gi0/1
+        ip: 10.0.23.1/30
+        neighbor: R3        # R2's link to R3
+
+  - id: R3
+    router_id: 3.3.3.3
+    interfaces:
+      - name: Gi0/0
+        ip: 10.0.13.2/30
+        neighbor: R1        # R3's link to R1
+      - name: Gi0/1
+        ip: 10.0.23.2/30
+        neighbor: R2        # R3's link to R2
